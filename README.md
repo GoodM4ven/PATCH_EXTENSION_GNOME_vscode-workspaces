@@ -107,6 +107,7 @@ Support ongoing maintenance as well as the development of **other projects** thr
 
 - [ZanzyTHEbar](https://github.com/ZanzyTHEbar) (the original developer)
 - [OpenAI - Codex](https://developers.openai.com/codex/cli)
+- [gnome-shell-extension-appindicator](https://github.com/ubuntu/gnome-shell-extension-appindicator/blob/master/README.md) (for the get-on-gnome image)
 
 </div>
 <div align="center">والحمد لله رب العالمين</div>
