@@ -1,17 +1,8 @@
 <div align="center">بسم الله الرحمن الرحيم</div>
+
 <div align="left">
 
 # VSCodium Workspaces
-
-</div>
-
-<div align="center">
-    <br>
-    <img src=".assets/icon.png" width="140">
-    <br><br>
-</div>
-
-<div align="left">
 
 A quick VSC project traversal and workspace management tool for Linux, a GNOME Shell extension.
 
