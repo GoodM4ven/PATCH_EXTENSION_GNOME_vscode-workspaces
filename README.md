@@ -11,8 +11,8 @@ Forked for maintenance from the original project by [ZanzyTHEbar](https://github
 ## Installation (from source)
 
 ```bash
-git clone https://github.com/GoodM4ven/PATCH_EXTENSION_GNOME_vscode-workspaces.git
-cd PATCH_EXTENSION_GNOME_vscode-workspaces/gnome-extension
+git clone https://github.com/GoodM4ven/PATCH_EXTENSION_GNOME_vscodium-workspaces.git
+cd PATCH_EXTENSION_GNOME_vscodium-workspaces/gnome-extension
 
 make install
 
