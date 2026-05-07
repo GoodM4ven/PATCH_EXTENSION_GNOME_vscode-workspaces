@@ -33,8 +33,7 @@ install: prepare-dist
 	@touch ~/.local/share/gnome-shell/extensions/$(NAME)@$(DOMAIN)
 	@rm -rf ~/.local/share/gnome-shell/extensions/$(NAME)@$(DOMAIN)
 	@mv dist ~/.local/share/gnome-shell/extensions/$(NAME)@$(DOMAIN)
-	@echo "Extension installed. Restart GNOME Shell with Alt+F2, then 'r'. Or login again."
-
+	@echo "Extension installed. Restart GNOME Shell by signing in again..."
 clean:
 	rm -rf $(NAME).zip schemas/gschemas.compiled
 

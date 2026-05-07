@@ -56,5 +56,10 @@
             <summary>Custom Icon</summary>
             <description>Path to a custom icon file or a theme icon name to use for the extension.</description>
         </key>
+        <key name="custom-workspace-labels" type="s">
+            <default>'{}'</default>
+            <summary>Custom Workspace Labels</summary>
+            <description>JSON object mapping workspace identity keys to custom display labels.</description>
+        </key>
     </schema>
 </schemalist>

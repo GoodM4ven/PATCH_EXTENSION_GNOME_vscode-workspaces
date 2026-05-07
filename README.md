@@ -1,3 +1,5 @@
+<div align="center">بسم الله الرحمن الرحيم</div>
+<div align="left">
 
 # VSCodium Workspaces
 
@@ -12,7 +14,9 @@ Forked for maintenance from the original project by [ZanzyTHEbar](https://github
 - Renamed context menu options for brevity.
 - Added a new option to do the initial scanning and looking for `.code-workspace` files.
 - Fixes the stuck-hover-tooltip bug (tooltip now force-cleans on click, menu close, and disable).
-
+- Having no duplicated entries.
+- Added classification for VSC-opened directories and workspaces.
+- The ability to rename entries too.
 
 ## Installation (from source)
 
@@ -70,3 +74,6 @@ nautilus -q
 
 - [ZanzyTHEbar](https://github.com/ZanzyTHEbar) (the original developer)
 - [OpenAI - Codex](https://developers.openai.com/codex/cli)
+
+</div>
+<div align="center">والحمد لله رب العالمين</div>
