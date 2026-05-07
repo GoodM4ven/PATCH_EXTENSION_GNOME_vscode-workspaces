@@ -70,6 +70,11 @@ nautilus -q
 ```
 
 
+## Support
+
+Support ongoing maintenance as well as the development of **other projects** through [sponsorship](https://github.com/sponsors/GoodM4ven) or one-time [donations](https://github.com/sponsors/GoodM4ven?frequency=one-time&sponsor=GoodM4ven) if you prefer.
+
+
 ## Credits
 
 - [ZanzyTHEbar](https://github.com/ZanzyTHEbar) (the original developer)
