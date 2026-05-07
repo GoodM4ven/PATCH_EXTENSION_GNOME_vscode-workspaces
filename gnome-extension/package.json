@@ -4,8 +4,8 @@
     "description": "A VSCode/Codium Workspace management tool-set for GNOME",
     "type": "module",
     "private": true,
-    "author": "ZanzyTHEbar <pyr0ndet0s97@gmail.com>",
-    "license": "LGPL-3.0-or-later",
+    "author": "GoodM4ven",
+    "license": "GPL-3.0-or-later",
     "sideEffects": false,
     "keywords": [
         "gnome",
@@ -40,6 +40,6 @@
     },
     "dependencies": {
         "@girs/gjs": "^3.3.0",
-        "@girs/gnome-shell": "46.0.0-beta8"
+        "@girs/gnome-shell": "^50.0.0"
     }
 }

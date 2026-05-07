@@ -1,5 +1,5 @@
 NAME=vscode-workspaces
-DOMAIN=prometheontechnologies.com
+DOMAIN=goodm4ven
 
 .PHONY: all pack install clean
 
