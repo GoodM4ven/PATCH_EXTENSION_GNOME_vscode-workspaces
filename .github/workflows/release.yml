@@ -15,9 +15,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-       run:
-         working-directory: ./gnome-extension
 
     steps:
       - name: Checkout code
@@ -30,7 +27,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: './gnome-extension/package-lock.json'
+          cache-dependency-path: './package-lock.json'
 
       - run: npm install -g semantic-release conventional-changelog-conventionalcommits @semantic-release/exec @semantic-release/git @semantic-release/github @semantic-release/changelog @semantic-release/release-notes-generator
 

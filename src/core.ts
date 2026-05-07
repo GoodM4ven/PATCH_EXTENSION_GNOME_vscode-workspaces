@@ -51,6 +51,7 @@ export class VSCodiumWorkspacesCore {
     private _indicator?: PanelMenu.Button;
     private _refreshTimeoutId: number | null = null;
     private _settingsChangedId: number | null = null;
+    private _refreshRequestId = 0;
 
     private _editorLocation = 'auto';
     private _refreshInterval = 30;
@@ -114,12 +115,12 @@ export class VSCodiumWorkspacesCore {
                     this._replaceIndicatorIcon();
                 }
 
-                this._refresh(true);
+                void this._refresh(true);
                 this._startRefreshLoop();
             });
         }
 
-        this._refresh(true);
+        void this._refresh(true);
         this._startRefreshLoop();
     }
 
@@ -183,7 +184,7 @@ export class VSCodiumWorkspacesCore {
             GLib.PRIORITY_DEFAULT,
             this._refreshInterval,
             () => {
-                this._refresh(false);
+                void this._refresh(false);
                 return GLib.SOURCE_CONTINUE;
             }
         );
@@ -196,13 +197,21 @@ export class VSCodiumWorkspacesCore {
         }
     }
 
-    private _refresh(forceRebuildEditors: boolean): void {
+    private async _refresh(forceRebuildEditors: boolean): Promise<void> {
+        const refreshRequestId = ++this._refreshRequestId;
+
         if (forceRebuildEditors || this._availableEditors.length === 0) {
             this._availableEditors = this._detectEditors();
             this._activeEditor = this._resolveActiveEditor();
         }
 
-        const scannedStorage = this._scanWorkspaces();
+        const scannedStorage = await this._scanWorkspaces();
+
+        // Ignore stale refresh results if a newer refresh started while awaiting file IO.
+        if (refreshRequestId !== this._refreshRequestId) {
+            return;
+        }
+
         const deduped = this._dedupeWorkspaceEntries([
             ...scannedStorage,
             ...this._discoveredWorkspaceFiles,
@@ -277,7 +286,7 @@ export class VSCodiumWorkspacesCore {
         return GLib.build_filenamev([this._userConfigDir, 'VSCodium/User/workspaceStorage']);
     }
 
-    private _scanWorkspaces(): WorkspaceEntry[] {
+    private async _scanWorkspaces(): Promise<WorkspaceEntry[]> {
         const editor = this._activeEditor;
         if (!editor) return [];
 
@@ -304,11 +313,11 @@ export class VSCodiumWorkspacesCore {
                 }
 
                 const storeDir = enumerator.get_child(info);
-                const workspace = this._parseWorkspaceFromStorage(storeDir, info);
+                const workspace = await this._parseWorkspaceFromStorage(storeDir, info);
                 if (workspace) entries.push(workspace);
             }
         } catch (error) {
-            console.error(error as object, 'Failed to scan workspace storage');
+            this._logError('Failed to scan workspace storage', error);
         } finally {
             enumerator?.close(null);
         }
@@ -381,7 +390,7 @@ export class VSCodiumWorkspacesCore {
         return favoriteIdentityKeys;
     }
 
-    private _parseWorkspaceFromStorage(storeDir: Gio.File, info: Gio.FileInfo): WorkspaceEntry | null {
+    private async _parseWorkspaceFromStorage(storeDir: Gio.File, info: Gio.FileInfo): Promise<WorkspaceEntry | null> {
         const workspaceJsonPath = GLib.build_filenamev([storeDir.get_path()!, 'workspace.json']);
         const workspaceJsonFile = Gio.File.new_for_path(workspaceJsonPath);
 
@@ -390,8 +399,7 @@ export class VSCodiumWorkspacesCore {
         }
 
         try {
-            const [ok, bytes] = workspaceJsonFile.load_contents(null);
-            if (!ok) return null;
+            const [bytes] = await workspaceJsonFile.load_contents_async(null);
 
             const raw = new TextDecoder().decode(bytes);
             const parsed = JSON.parse(raw) as WorkspaceJson;
@@ -427,7 +435,7 @@ export class VSCodiumWorkspacesCore {
                 nofail,
             };
         } catch (error) {
-            console.error(error as object, 'Failed to parse workspace entry');
+            this._logError('Failed to parse workspace entry', error);
             return null;
         }
     }
@@ -451,7 +459,7 @@ export class VSCodiumWorkspacesCore {
             const trashed = storeDir.trash(null);
             this._log(`orphaned workspace store ${trashed ? 'trashed' : 'failed'}: ${uri}`);
         } catch (error) {
-            console.error(error as object, `Failed to trash orphaned workspace store: ${uri}`);
+            this._logError(`Failed to trash orphaned workspace store: ${uri}`, error);
         }
     }
 
@@ -490,7 +498,7 @@ export class VSCodiumWorkspacesCore {
                 return `${FILE_URI_PREFIX}${filePath}`;
             }
         } catch (error) {
-            console.error(error as object, 'Failed to resolve .code-workspace-only URI');
+            this._logError('Failed to resolve .code-workspace-only URI', error);
         } finally {
             enumerator?.close(null);
         }
@@ -574,7 +582,7 @@ export class VSCodiumWorkspacesCore {
                     }
                 }
             } catch (error) {
-                console.error(error as object, 'Failed while walking directory for .code-workspace files');
+                this._logError('Failed while walking directory for .code-workspace files', error);
             } finally {
                 enumerator?.close(null);
             }
@@ -835,7 +843,9 @@ export class VSCodiumWorkspacesCore {
 
     private _appendActions(menu: PopupMenu.PopupMenu): void {
         const refreshItem = new PopupMenu.PopupMenuItem(_('Refresh'));
-        refreshItem.connect('activate', () => this._refresh(false));
+        refreshItem.connect('activate', () => {
+            void this._refresh(false);
+        });
 
         const scanItem = new PopupMenu.PopupMenuItem(_('Scan'));
         scanItem.connect('activate', () => {
@@ -848,7 +858,7 @@ export class VSCodiumWorkspacesCore {
                     GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
                         this._log('manual scan requested');
                         this._discoveredWorkspaceFiles = this._scanWorkspaceFilesFromDisk();
-                        this._refresh(true);
+                        void this._refresh(true);
                         return GLib.SOURCE_REMOVE;
                     });
                 }
@@ -888,7 +898,7 @@ export class VSCodiumWorkspacesCore {
             item.connect('activate', () => {
                 this._editorLocation = editor.binary;
                 this._settings?.set_string('editor-location', editor.binary);
-                this._refresh(true);
+                void this._refresh(true);
             });
 
             editorSubmenu.menu.addMenuItem(item);
@@ -926,7 +936,7 @@ export class VSCodiumWorkspacesCore {
         }
 
         this._persistDynamicSettings();
-        this._refresh(false);
+        void this._refresh(false);
     }
 
     private _normalizeFavoriteUris(entries: WorkspaceEntry[]): void {
@@ -1000,7 +1010,7 @@ export class VSCodiumWorkspacesCore {
             try {
                 entry.storeDir.trash(null);
             } catch (error) {
-                console.error(error as object, `Failed to trash workspace store for ${entry.uri}`);
+                this._logError(`Failed to trash workspace store for ${entry.uri}`, error);
             }
         }
 
@@ -1037,7 +1047,7 @@ export class VSCodiumWorkspacesCore {
                 child.trash(null);
             }
         } catch (error) {
-            console.error(error as object, 'Failed to clear workspace storage');
+            this._logError('Failed to clear workspace storage', error);
         } finally {
             enumerator?.close(null);
         }
@@ -1184,7 +1194,7 @@ export class VSCodiumWorkspacesCore {
             );
             this._log(`spawned ${editor.binary} with pid ${pid}`);
         } catch (error) {
-            console.error(error as object, 'Failed to launch editor');
+            this._logError('Failed to launch editor', error);
         }
     }
 
@@ -1204,7 +1214,7 @@ export class VSCodiumWorkspacesCore {
                     argv.push(...parsedArgv);
                 }
             } catch (error) {
-                console.error(error as object, 'Failed to parse custom command args');
+                this._logError('Failed to parse custom command args', error);
             }
         }
 
@@ -1271,6 +1281,19 @@ export class VSCodiumWorkspacesCore {
 
         this._indicator.remove_all_children();
         this._indicator.add_child(this._createIcon());
+    }
+
+    private _logError(message: string, error: unknown): void {
+        if (!this._debug) return;
+
+        const prefixedMessage = `[${this._metadata.name}] ${message}`;
+
+        if (error === null || error === undefined) {
+            console.error(prefixedMessage);
+            return;
+        }
+
+        console.error(error, prefixedMessage);
     }
 
     private _log(message: string): void {

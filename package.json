@@ -20,6 +20,10 @@
         "traversal"
     ],
     "scripts": {
+        "build": "npx tsc",
+        "pack": "make pack",
+        "analyze:shexli": "make shexli",
+        "analyze:shexli:json": "make pack && ./scripts/helpers/shexli-scan.sh ./vscodium-workspaces.zip --format json",
         "format": "prettier --check .",
         "format:fix": "prettier --write --cache . && eslint --fix .",
         "update-deps": "npm update",

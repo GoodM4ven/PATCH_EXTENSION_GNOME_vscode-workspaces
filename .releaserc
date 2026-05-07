@@ -147,7 +147,7 @@
         [
             "@semantic-release/exec",
             {
-                "prepareCmd": "echo Prepare ${nextRelease.version}",
+                "prepareCmd": "if [ \"${CI:-}\" = \"true\" ] && [ -f \"./vscodium-workspaces.zip\" ]; then mv \"./vscodium-workspaces.zip\" \"./vscodium-workspaces-v${nextRelease.version}.zip\"; fi && echo Prepare ${nextRelease.version}",
                 "publishCmd": "echo Publishing ${nextRelease.version}"
             }
         ],

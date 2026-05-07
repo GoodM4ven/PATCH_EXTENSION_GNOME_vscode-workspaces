@@ -3,6 +3,16 @@
 
 # VSCodium Workspaces
 
+</div>
+
+<div align="center">
+    <br>
+    <img src=".assets/icon.png" width="140">
+    <br>
+</div>
+
+<div align="left">
+
 A quick VSC project traversal and workspace management tool for Linux, a GNOME Shell extension.
 
 Forked for maintenance from the original project by [ZanzyTHEbar](https://github.com/ZanzyTHEbar), then rebranded for [VSCodium](https://vscodium.com)-first usage.
@@ -20,24 +30,43 @@ Forked for maintenance from the original project by [ZanzyTHEbar](https://github
 - Added classification for VSC-opened directories and workspaces.
 - The ability to rename entries too.
 
-## Installation (from source)
+## Installation
+
+You can download the GNOME Shell extension from their platform:
+
+<img src=".github/assets/gnome-extensions.svg" width="140">
+
+
+## Debugging
+
+Installing from source:
 
 ```bash
 git clone https://github.com/GoodM4ven/PATCH_EXTENSION_GNOME_vscodium-workspaces.git
-cd PATCH_EXTENSION_GNOME_vscodium-workspaces/gnome-extension
-
+cd PATCH_EXTENSION_GNOME_vscodium-workspaces
 make install
-
 gnome-extensions enable vscodium-workspaces@goodm4ven
 ```
 
-`zip` is only required for publishing via `make pack`.
+Requirements include:
 
-### Debugging
+- `node` + `npm`
+- `python3` (required for Shexli helper tooling via local virtualenv)
+- `zip` (only required for `make pack`)
+
+For finding major GNOME errors:
 
 ```bash
 journalctl /usr/bin/gnome-shell -f | grep vscodium-workspaces
 ```
+
+You can also utilize Shexli analyzer for EGO reviews and for early detection:
+
+```bash
+npm run analyze:shexli
+```
+
+This command creates a local virtualenv at `.tools/shexli-venv` and installs pinned `shexli`.
 
 ### Removal
 
@@ -57,15 +86,15 @@ rm -rf ~/.local/share/gnome-shell/extensions/vscodium-workspaces@goodm4ven
 
 This repo still ships the optional Nautilus scripts:
 
-- `vscodium_nautilus_workspaces.py`
-- `vscodium-nautilus-open.py`
+- `scripts/vscodium_nautilus_workspaces.py`
+- `scripts/vscodium-nautilus-open.py`
 
 Install Nautilus Python bindings (package name varies by distro), then copy scripts to Nautilus extensions:
 
 ```bash
 mkdir -p ~/.local/share/nautilus-python/extensions
-cp vscodium_nautilus_workspaces.py ~/.local/share/nautilus-python/extensions/
-cp vscodium-nautilus-open.py ~/.local/share/nautilus-python/extensions/
+cp scripts/vscodium_nautilus_workspaces.py ~/.local/share/nautilus-python/extensions/
+cp scripts/vscodium-nautilus-open.py ~/.local/share/nautilus-python/extensions/
 chmod +x ~/.local/share/nautilus-python/extensions/vscodium_nautilus_workspaces.py
 chmod +x ~/.local/share/nautilus-python/extensions/vscodium-nautilus-open.py
 nautilus -q
