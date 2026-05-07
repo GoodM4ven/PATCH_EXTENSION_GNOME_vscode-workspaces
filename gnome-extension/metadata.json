@@ -1,9 +1,9 @@
 {
-    "name": "VSCode Workspaces",
-    "description": "A VSCode/Codium Workspace management tool-set for GNOME - This extension is not affiliated, funded, or in any way associated with Microsoft and vscode software.",
-    "uuid": "vscode-workspaces@goodm4ven",
+    "name": "VSCodium Workspaces",
+    "description": "A VSCodium workspace management tool-set for GNOME.",
+    "uuid": "vscodium-workspaces@goodm4ven",
     "url": "https://github.com/GoodM4ven/PATCH_EXTENSION_GNOME_vscode-workspaces",
-    "settings-schema": "org.gnome.shell.extensions.vscode-workspaces",
+    "settings-schema": "org.gnome.shell.extensions.vscodium-workspaces",
     "shell-version": [
         "50"
     ],

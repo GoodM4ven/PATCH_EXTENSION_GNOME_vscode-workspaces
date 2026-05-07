@@ -1,4 +1,4 @@
-NAME=vscode-workspaces
+NAME=vscodium-workspaces
 DOMAIN=goodm4ven
 
 .PHONY: all pack install clean prepare-dist

@@ -8,31 +8,31 @@ from gi.repository import GLib, GObject, Nautilus
 
 # Configure logging
 logging.basicConfig(
-    filename="/tmp/vscode_workspaces_extension.log", level=logging.DEBUG
+    filename="/tmp/vscodium_workspaces_extension.log", level=logging.DEBUG
 )
 
 # Path to the recent workspaces JSON file
 RECENT_WORKSPACES_PATH = os.path.expanduser(
-    "~/.config/Code/User/globalStorage/storage.json"
+    "~/.config/VSCodium/User/globalStorage/storage.json"
 )
 
-# path to vscode
-VSCODE = "code"
+# path to vscodium
+VSCODIUM = "codium"
 
 # what name do you want to see in the context menu?
-VSCODENAME = "Code"
+VSCODIUMNAME = "VSCodium"
 
 # always create new window?
 NEWWINDOW = False
 
 
-class VSCodeWorkspacesExtension(GObject.GObject, Nautilus.MenuProvider):
+class VSCodiumWorkspacesExtension(GObject.GObject, Nautilus.MenuProvider):
     def __init__(self):
-        super(VSCodeWorkspacesExtension, self).__init__()
-        logging.info("VSCodeWorkspacesExtension initialized")
+        super(VSCodiumWorkspacesExtension, self).__init__()
+        logging.info("VSCodiumWorkspacesExtension initialized")
 
-    def launch_vscode(self, menu, files):
-        logging.info(f"Launching {VSCODENAME} with {files}")
+    def launch_vscodium(self, menu, files):
+        logging.info(f"Launching {VSCODIUMNAME} with {files}")
 
         safepaths = ""
         args = ""
@@ -45,7 +45,7 @@ class VSCodeWorkspacesExtension(GObject.GObject, Nautilus.MenuProvider):
             logging.info(f"File path: {safepaths}")
 
             # If one of the files we are trying to open is a folder
-            # create a new instance of vscode
+            # create a new instance of vscodium
             if os.path.isdir(file) and os.path.exists(file):
                 logging.info(f"Found a directory: {file}")
                 args = "--new-window "
@@ -55,14 +55,14 @@ class VSCodeWorkspacesExtension(GObject.GObject, Nautilus.MenuProvider):
         if len(files) == 1 and files[0].startswith("vscode-remote://"):
             args = "--folder-uri"
 
-        command = f"{VSCODE} {args} {safepaths} &"
+        command = f"{VSCODIUM} {args} {safepaths} &"
         logging.info(f"Command to execute: {command}")
 
         try:
             call(command, shell=True)
-            logging.info(f"Successfully launched {VSCODENAME} with {safepaths}")
+            logging.info(f"Successfully launched {VSCODIUMNAME} with {safepaths}")
         except Exception as e:
-            logging.error(f"Failed to launch {VSCODENAME} with {safepaths}: {e}")
+            logging.error(f"Failed to launch {VSCODIUMNAME} with {safepaths}: {e}")
 
     def _get_recent_workspaces(self):
         if not os.path.exists(RECENT_WORKSPACES_PATH):
@@ -90,7 +90,7 @@ class VSCodeWorkspacesExtension(GObject.GObject, Nautilus.MenuProvider):
 
     def _open_workspace(self, menu, workspace_path):
         logging.debug(f"Opening workspace: {workspace_path}")
-        self.launch_vscode(menu, [workspace_path])
+        self.launch_vscodium(menu, [workspace_path])
 
     def _get_name(self, workspace):
         # Handle file:// paths
@@ -98,7 +98,7 @@ class VSCodeWorkspacesExtension(GObject.GObject, Nautilus.MenuProvider):
             path = workspace.replace("file://", "")
             return path.replace(GLib.get_home_dir(), "~")
 
-        # Early return for non-vscode-remote paths
+        # Early return for non-remote paths
         if not workspace.startswith("vscode-remote://ssh-remote+"):
             return workspace
 
@@ -124,9 +124,9 @@ class VSCodeWorkspacesExtension(GObject.GObject, Nautilus.MenuProvider):
             return
 
         menu_item = Nautilus.MenuItem(
-            name="VSCodeWorkspacesExtension::OpenRecent",
+            name="VSCodiumWorkspacesExtension::OpenRecent",
             label="Open Recent Workspaces",
-            tip="Show recent VSCode workspaces",
+            tip="Show recent VSCodium workspaces",
         )
 
         submenu = Nautilus.Menu()
@@ -137,7 +137,7 @@ class VSCodeWorkspacesExtension(GObject.GObject, Nautilus.MenuProvider):
             if workspace_name is None:
                 continue
             item = Nautilus.MenuItem(
-                name=f"VSCodeWorkspacesExtension::Open_{workspace_name}",
+                name=f"VSCodiumWorkspacesExtension::Open_{workspace_name}",
                 label=workspace_name,
                 tip=f"Open {workspace_name}",
             )

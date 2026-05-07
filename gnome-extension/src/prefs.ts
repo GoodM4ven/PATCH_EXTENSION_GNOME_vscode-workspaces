@@ -7,7 +7,7 @@ import {
     gettext as _,
 } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-export default class VSCodeWorkspacesPreferences extends ExtensionPreferences {
+export default class VSCodiumWorkspacesPreferences extends ExtensionPreferences {
     async fillPreferencesWindow(window: Adw.PreferencesWindow): Promise<void> {
         const settings = this.getSettings();
         const ui = new SettingsUi(settings);

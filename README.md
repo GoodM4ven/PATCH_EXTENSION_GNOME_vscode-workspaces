@@ -1,8 +1,6 @@
-# VSCode Workspaces
+# VSCodium Workspaces
 
-![GitHub License](https://img.shields.io/github/license/GoodM4ven/PATCH_EXTENSION_GNOME_vscode-workspaces)
-
-Forked for maintenance from [`ZanzyTHEbar/vscode-workspaces`](https://github.com/ZanzyTHEbar/vscode-workspaces).
+Forked for maintenance from the original project by [ZanzyTHEbar](https://github.com/ZanzyTHEbar), then rebranded for VSCodium-first usage.
 
 ## Objectives
 
@@ -18,7 +16,7 @@ cd PATCH_EXTENSION_GNOME_vscode-workspaces/gnome-extension
 
 make install
 
-gnome-extensions enable vscode-workspaces@goodm4ven
+gnome-extensions enable vscodium-workspaces@goodm4ven
 ```
 
 `zip` is only required for publishing via `make pack`.
@@ -26,37 +24,37 @@ gnome-extensions enable vscode-workspaces@goodm4ven
 ### Debugging
 
 ```bash
-journalctl /usr/bin/gnome-shell -f | grep vscode-workspaces
+journalctl /usr/bin/gnome-shell -f | grep vscodium-workspaces
 ```
 
 ### Removal
 
 ```bash
-gnome-extensions disable vscode-workspaces@goodm4ven
-gnome-extensions uninstall vscode-workspaces@goodm4ven
+gnome-extensions disable vscodium-workspaces@goodm4ven
+gnome-extensions uninstall vscodium-workspaces@goodm4ven
 ```
 
 Or remove files directly:
 
 ```bash
-rm -rf ~/.local/share/gnome-shell/extensions/vscode-workspaces@goodm4ven
+rm -rf ~/.local/share/gnome-shell/extensions/vscodium-workspaces@goodm4ven
 ```
 
 ## Optional Nautilus Integration
 
 This repo still ships the optional Nautilus scripts:
 
-- `vscode_nautilus_workspaces.py`
-- `vscode-nautilus-open.py`
+- `vscodium_nautilus_workspaces.py`
+- `vscodium-nautilus-open.py`
 
 Install Nautilus Python bindings (package name varies by distro), then copy scripts to Nautilus extensions:
 
 ```bash
 mkdir -p ~/.local/share/nautilus-python/extensions
-cp vscode_nautilus_workspaces.py ~/.local/share/nautilus-python/extensions/
-cp vscode-nautilus-open.py ~/.local/share/nautilus-python/extensions/
-chmod +x ~/.local/share/nautilus-python/extensions/vscode_nautilus_workspaces.py
-chmod +x ~/.local/share/nautilus-python/extensions/vscode-nautilus-open.py
+cp vscodium_nautilus_workspaces.py ~/.local/share/nautilus-python/extensions/
+cp vscodium-nautilus-open.py ~/.local/share/nautilus-python/extensions/
+chmod +x ~/.local/share/nautilus-python/extensions/vscodium_nautilus_workspaces.py
+chmod +x ~/.local/share/nautilus-python/extensions/vscodium-nautilus-open.py
 nautilus -q
 ```
 

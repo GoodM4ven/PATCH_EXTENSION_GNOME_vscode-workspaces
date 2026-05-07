@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <schemalist>
-    <schema id="org.gnome.shell.extensions.vscode-workspaces"
-        path="/org/gnome/shell/extensions/vscode-workspaces/">
+    <schema id="org.gnome.shell.extensions.vscodium-workspaces"
+        path="/org/gnome/shell/extensions/vscodium-workspaces/">
         <key name="editor-location" type="s">
             <default>'auto'</default>
             <summary>Editor Location</summary>
@@ -16,7 +16,7 @@
         <key name="new-window" type="b">
             <default>false</default>
             <summary>New Window</summary>
-            <description>Open Code in New Window</description>
+            <description>Open VSCodium in New Window</description>
         </key>
         <key name="prefer-workspace-file" type="b">
             <default>false</default>

@@ -1,7 +1,7 @@
 {
-    "name": "vscode-workspaces",
+    "name": "vscodium-workspaces",
     "version": "1.0.0",
-    "description": "A VSCode/Codium Workspace management tool-set for GNOME",
+    "description": "A VSCodium workspace management tool-set for GNOME",
     "type": "module",
     "private": true,
     "author": "GoodM4ven",
@@ -9,7 +9,7 @@
     "sideEffects": false,
     "keywords": [
         "gnome",
-        "vscode",
+        "vscodium",
         "codium",
         "workspace",
         "javascript",

@@ -32,10 +32,10 @@ interface WorkspaceJson {
 }
 
 const FILE_URI_PREFIX = 'file://';
-const KNOWN_ICON_NAMES = ['code', 'vscode', 'vscodium', 'codium', 'code-insiders'];
+const KNOWN_ICON_NAMES = ['code', 'vscodium', 'codium', 'code-insiders'];
 const MAX_VISIBLE_WORKSPACES = 75;
 
-export class VSCodeWorkspacesCore {
+export class VSCodiumWorkspacesCore {
     private readonly _metadata: { name: string; uuid: string };
     private readonly _openPreferences: () => void;
     private _settings?: Gio.Settings;
@@ -58,15 +58,15 @@ export class VSCodeWorkspacesCore {
     private readonly _userConfigDir = GLib.build_filenamev([GLib.get_home_dir(), '.config']);
     private readonly _knownEditors: Editor[] = [
         {
-            name: 'Visual Studio Code',
-            binary: 'code',
-            workspacePath: GLib.build_filenamev([GLib.get_home_dir(), '.config/Code/User/workspaceStorage']),
-            isDefault: true,
-        },
-        {
             name: 'VSCodium',
             binary: 'codium',
             workspacePath: GLib.build_filenamev([GLib.get_home_dir(), '.config/VSCodium/User/workspaceStorage']),
+            isDefault: true,
+        },
+        {
+            name: 'Code OSS',
+            binary: 'code',
+            workspacePath: GLib.build_filenamev([GLib.get_home_dir(), '.config/Code/User/workspaceStorage']),
         },
         {
             name: 'Code - Insiders',
@@ -254,7 +254,7 @@ export class VSCodeWorkspacesCore {
             return GLib.build_filenamev([this._userConfigDir, 'Code - Insiders/User/workspaceStorage']);
         }
 
-        return GLib.build_filenamev([this._userConfigDir, 'Code/User/workspaceStorage']);
+        return GLib.build_filenamev([this._userConfigDir, 'VSCodium/User/workspaceStorage']);
     }
 
     private _scanWorkspaces(): WorkspaceEntry[] {
@@ -324,7 +324,7 @@ export class VSCodeWorkspacesCore {
                 return null;
             }
 
-            const uriToOpen = this._preferWorkspaceFile ? this._preferCodeWorkspaceFile(uri) : uri;
+            const uriToOpen = this._preferWorkspaceFile ? this._preferWorkspaceFilePath(uri) : uri;
             const { label, displayPath } = this._workspaceDisplay(uriToOpen);
 
             return {
@@ -365,7 +365,7 @@ export class VSCodeWorkspacesCore {
         }
     }
 
-    private _preferCodeWorkspaceFile(uri: string): string {
+    private _preferWorkspaceFilePath(uri: string): string {
         if (!uri.startsWith(FILE_URI_PREFIX)) return uri;
 
         const basePath = decodeURIComponent(uri.replace(FILE_URI_PREFIX, ''));
