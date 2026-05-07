@@ -8,6 +8,8 @@ A quick VSC project traversal and workspace management tool for Linux, a GNOME S
 
 Forked for maintenance from the original project by [ZanzyTHEbar](https://github.com/ZanzyTHEbar), then rebranded for [VSCodium](https://vscodium.com)-first usage.
 
+<img src=".github/assets/screenshot.png" width="280">
+
 
 ## Objectives
 
