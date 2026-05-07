@@ -1,12 +1,18 @@
+
 # VSCodium Workspaces
 
 Forked for maintenance from the original project by [ZanzyTHEbar](https://github.com/ZanzyTHEbar), then rebranded for VSCodium-first usage.
+
 
 ## Objectives
 
 - Targeting GNOME Shell `v50` initially...
 - Rewritten GNOME extension internals for a cleaner code path.
+- Removed some extra preferences while renaming others for clarity.
+- Renamed context menu options for brevity.
+- Added a new option to do the initial scanning and looking for `.code-workspace` files.
 - Fixes the stuck-hover-tooltip bug (tooltip now force-cleans on click, menu close, and disable).
+
 
 ## Installation (from source)
 
@@ -40,6 +46,7 @@ Or remove files directly:
 rm -rf ~/.local/share/gnome-shell/extensions/vscodium-workspaces@goodm4ven
 ```
 
+
 ## Optional Nautilus Integration
 
 This repo still ships the optional Nautilus scripts:
@@ -57,6 +64,7 @@ chmod +x ~/.local/share/nautilus-python/extensions/vscodium_nautilus_workspaces.
 chmod +x ~/.local/share/nautilus-python/extensions/vscodium-nautilus-open.py
 nautilus -q
 ```
+
 
 ## Credits
 

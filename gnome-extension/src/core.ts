@@ -19,7 +19,8 @@ interface WorkspaceEntry {
     uri: string;
     label: string;
     displayPath: string;
-    storeDir: Gio.File;
+    storeDir: Gio.File | null;
+    source: 'storage' | 'discovered';
     modifiedUsec: number;
     remote: boolean;
     nofail: boolean;
@@ -32,8 +33,11 @@ interface WorkspaceJson {
 }
 
 const FILE_URI_PREFIX = 'file://';
+const DEFAULT_VSCODIUM_ICON_PATH = '/usr/share/pixmaps/vscodium.png';
 const KNOWN_ICON_NAMES = ['code', 'vscodium', 'codium', 'code-insiders'];
 const MAX_VISIBLE_WORKSPACES = 75;
+const DISCOVERY_MAX_DEPTH = 6;
+const DISCOVERY_MAX_RESULTS = 500;
 
 export class VSCodiumWorkspacesCore {
     private readonly _metadata: { name: string; uuid: string };
@@ -44,10 +48,9 @@ export class VSCodiumWorkspacesCore {
     private _refreshTimeoutId: number | null = null;
     private _settingsChangedId: number | null = null;
 
-    private _newWindow = false;
     private _editorLocation = 'auto';
     private _refreshInterval = 30;
-    private _preferWorkspaceFile = false;
+    private _workspaceFilesOnly = false;
     private _debug = false;
     private _cleanupOrphanedWorkspaces = false;
     private _nofailList: string[] = [];
@@ -78,6 +81,7 @@ export class VSCodiumWorkspacesCore {
     private _availableEditors: Editor[] = [];
     private _activeEditor: Editor | null = null;
     private _workspaces: WorkspaceEntry[] = [];
+    private _discoveredWorkspaceFiles: WorkspaceEntry[] = [];
 
     private _tooltipActor: St.Label | null = null;
 
@@ -88,11 +92,12 @@ export class VSCodiumWorkspacesCore {
     }
 
     enable(): void {
+        this._setSettings();
+
         this._indicator = new PanelMenu.Button(0.0, this._metadata.name, false);
         this._indicator.add_child(this._createIcon());
         Main.panel.addToStatusArea(this._metadata.uuid, this._indicator);
 
-        this._setSettings();
         this._attachMenuSignals();
 
         if (this._settings) {
@@ -127,6 +132,7 @@ export class VSCodiumWorkspacesCore {
         this._activeEditor = null;
         this._availableEditors = [];
         this._workspaces = [];
+        this._discoveredWorkspaceFiles = [];
     }
 
     private _attachMenuSignals(): void {
@@ -144,10 +150,9 @@ export class VSCodiumWorkspacesCore {
     private _setSettings(): void {
         if (!this._settings) return;
 
-        this._newWindow = this._settings.get_boolean('new-window');
         this._editorLocation = this._settings.get_string('editor-location') || 'auto';
         this._refreshInterval = Math.max(5, this._settings.get_int('refresh-interval'));
-        this._preferWorkspaceFile = this._settings.get_boolean('prefer-workspace-file');
+        this._workspaceFilesOnly = this._settings.get_boolean('prefer-workspace-file');
         this._debug = this._settings.get_boolean('debug');
         this._cleanupOrphanedWorkspaces = this._settings.get_boolean('cleanup-orphaned-workspaces');
         this._nofailList = this._settings.get_strv('nofail-workspaces');
@@ -188,7 +193,11 @@ export class VSCodiumWorkspacesCore {
             this._activeEditor = this._resolveActiveEditor();
         }
 
-        this._workspaces = this._scanWorkspaces();
+        const scannedStorage = this._scanWorkspaces();
+        this._workspaces = this._dedupeWorkspaceEntries([
+            ...scannedStorage,
+            ...this._discoveredWorkspaceFiles,
+        ]).slice(0, MAX_VISIBLE_WORKSPACES);
         this._buildMenu();
     }
 
@@ -294,7 +303,20 @@ export class VSCodiumWorkspacesCore {
         }
 
         entries.sort((a, b) => b.modifiedUsec - a.modifiedUsec);
-        return entries.slice(0, MAX_VISIBLE_WORKSPACES);
+        return this._dedupeWorkspaceEntries(entries);
+    }
+
+    private _dedupeWorkspaceEntries(entries: WorkspaceEntry[]): WorkspaceEntry[] {
+        const deduped = new Map<string, WorkspaceEntry>();
+
+        for (const entry of entries) {
+            const existing = deduped.get(entry.uri);
+            if (!existing || entry.modifiedUsec > existing.modifiedUsec) {
+                deduped.set(entry.uri, entry);
+            }
+        }
+
+        return Array.from(deduped.values()).sort((a, b) => b.modifiedUsec - a.modifiedUsec);
     }
 
     private _parseWorkspaceFromStorage(storeDir: Gio.File, info: Gio.FileInfo): WorkspaceEntry | null {
@@ -324,7 +346,10 @@ export class VSCodiumWorkspacesCore {
                 return null;
             }
 
-            const uriToOpen = this._preferWorkspaceFile ? this._preferWorkspaceFilePath(uri) : uri;
+            const uriToOpen = this._workspaceFilesOnly ? this._codeWorkspaceOnlyUri(uri) : uri;
+            if (!uriToOpen) {
+                return null;
+            }
             const { label, displayPath } = this._workspaceDisplay(uriToOpen);
 
             return {
@@ -332,6 +357,7 @@ export class VSCodiumWorkspacesCore {
                 label,
                 displayPath,
                 storeDir,
+                source: 'storage',
                 modifiedUsec: info.get_attribute_uint64('time::modified-usec'),
                 remote,
                 nofail,
@@ -365,14 +391,20 @@ export class VSCodiumWorkspacesCore {
         }
     }
 
-    private _preferWorkspaceFilePath(uri: string): string {
-        if (!uri.startsWith(FILE_URI_PREFIX)) return uri;
+    private _codeWorkspaceOnlyUri(uri: string): string | null {
+        if (!uri.startsWith(FILE_URI_PREFIX)) {
+            return uri.endsWith('.code-workspace') ? uri : null;
+        }
+
+        if (uri.endsWith('.code-workspace')) {
+            return uri;
+        }
 
         const basePath = decodeURIComponent(uri.replace(FILE_URI_PREFIX, ''));
         const base = Gio.File.new_for_path(basePath);
 
         if (base.query_file_type(Gio.FileQueryInfoFlags.NONE, null) !== Gio.FileType.DIRECTORY) {
-            return uri;
+            return null;
         }
 
         let enumerator: Gio.FileEnumerator | null = null;
@@ -394,12 +426,97 @@ export class VSCodiumWorkspacesCore {
                 return `${FILE_URI_PREFIX}${filePath}`;
             }
         } catch (error) {
-            console.error(error as object, 'Failed to prefer .code-workspace file');
+            console.error(error as object, 'Failed to resolve .code-workspace-only URI');
         } finally {
             enumerator?.close(null);
         }
 
-        return uri;
+        return null;
+    }
+
+    private _scanWorkspaceFilesFromDisk(): WorkspaceEntry[] {
+        const excludedDirNames = new Set([
+            '.git',
+            'node_modules',
+            '.cache',
+            '.npm',
+            '.cargo',
+            '.rustup',
+            'venv',
+            '.venv',
+        ]);
+        const home = GLib.get_home_dir();
+        const root = Gio.File.new_for_path(home);
+        const queue: Array<{ dir: Gio.File; depth: number }> = [{ dir: root, depth: 0 }];
+        const entries: WorkspaceEntry[] = [];
+
+        while (queue.length > 0 && entries.length < DISCOVERY_MAX_RESULTS) {
+            const current = queue.pop();
+            if (!current) break;
+
+            let enumerator: Gio.FileEnumerator | null = null;
+            try {
+                enumerator = current.dir.enumerate_children(
+                    'standard::name,standard::type,time::modified-usec',
+                    Gio.FileQueryInfoFlags.NONE,
+                    null
+                );
+
+                let info: Gio.FileInfo | null;
+                while ((info = enumerator.next_file(null)) !== null) {
+                    const name = info.get_name();
+                    const fileType = info.get_file_type();
+                    const child = enumerator.get_child(info);
+
+                    if (fileType === Gio.FileType.DIRECTORY) {
+                        if (current.depth >= DISCOVERY_MAX_DEPTH) {
+                            continue;
+                        }
+
+                        const childPath = child.get_path() ?? '';
+                        if (excludedDirNames.has(name)) {
+                            continue;
+                        }
+                        if (childPath.includes('/.local/share/Trash')) {
+                            continue;
+                        }
+
+                        queue.push({ dir: child, depth: current.depth + 1 });
+                        continue;
+                    }
+
+                    if (fileType !== Gio.FileType.REGULAR || !name.endsWith('.code-workspace')) {
+                        continue;
+                    }
+
+                    const uri = child.get_uri();
+                    const { label, displayPath } = this._workspaceDisplay(uri);
+
+                    entries.push({
+                        uri,
+                        label,
+                        displayPath,
+                        storeDir: null,
+                        source: 'discovered',
+                        modifiedUsec: info.get_attribute_uint64('time::modified-usec'),
+                        remote: false,
+                        nofail: false,
+                    });
+
+                    if (entries.length >= DISCOVERY_MAX_RESULTS) {
+                        break;
+                    }
+                }
+            } catch (error) {
+                console.error(error as object, 'Failed while walking directory for .code-workspace files');
+            } finally {
+                enumerator?.close(null);
+            }
+        }
+
+        const deduped = this._dedupeWorkspaceEntries(entries);
+        this._log(`disk scan discovered ${deduped.length} .code-workspace files`);
+        return deduped;
     }
 
     private _workspaceDisplay(uri: string): { label: string; displayPath: string } {
@@ -467,7 +584,7 @@ export class VSCodiumWorkspacesCore {
             menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         }
 
-        const recentSubmenu = new PopupMenu.PopupSubMenuMenuItem(_('Recent Workspaces'));
+        const recentSubmenu = new PopupMenu.PopupSubMenuMenuItem(_('Recently Found'));
         for (const entry of recents) {
             recentSubmenu.menu.addMenuItem(this._createWorkspaceMenuItem(entry));
         }
@@ -492,32 +609,38 @@ export class VSCodiumWorkspacesCore {
             can_focus: true,
             reactive: true,
             track_hover: true,
+            button_mask: St.ButtonMask.ONE,
             child: new St.Icon({
                 icon_name: this._favorites.has(entry.uri) ? 'starred-symbolic' : 'non-starred-symbolic',
                 style_class: 'workspace-entry-icon',
             }),
         });
 
-        favoriteButton.connect('clicked', () => {
+        favoriteButton.clear_actions();
+        favoriteButton.connect('button-press-event', () => {
             this._toggleFavorite(entry.uri);
+            this._log(`favorite toggled: ${entry.uri}`);
+            return Clutter.EVENT_STOP;
         });
-        favoriteButton.connect('button-press-event', () => Clutter.EVENT_STOP);
 
         const removeButton = new St.Button({
             style_class: 'workspace-icon-button',
             can_focus: true,
             reactive: true,
             track_hover: true,
+            button_mask: St.ButtonMask.ONE,
             child: new St.Icon({
                 icon_name: 'user-trash-symbolic',
                 style_class: 'workspace-entry-icon workspace-remove-icon',
             }),
         });
 
-        removeButton.connect('clicked', () => {
+        removeButton.clear_actions();
+        removeButton.connect('button-press-event', () => {
             this._removeWorkspaceEntry(entry);
+            this._log(`workspace removed: ${entry.uri}`);
+            return Clutter.EVENT_STOP;
         });
-        removeButton.connect('button-press-event', () => Clutter.EVENT_STOP);
 
         row.add_child(label);
         row.add_child(favoriteButton);
@@ -580,18 +703,31 @@ export class VSCodiumWorkspacesCore {
 
     private _appendActions(menu: PopupMenu.PopupMenu): void {
         const refreshItem = new PopupMenu.PopupMenuItem(_('Refresh'));
-        refreshItem.connect('activate', () => this._refresh(true));
+        refreshItem.connect('activate', () => this._refresh(false));
 
-        const clearItem = new PopupMenu.PopupMenuItem(_('Clear Workspaces'));
+        const scanItem = new PopupMenu.PopupMenuItem(_('Scan'));
+        scanItem.connect('activate', () => {
+            this._destroyTooltip();
+            this._indicator?.menu.close();
+            GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+                this._log('manual scan requested');
+                this._discoveredWorkspaceFiles = this._scanWorkspaceFilesFromDisk();
+                this._refresh(true);
+                return GLib.SOURCE_REMOVE;
+            });
+        });
+
+        const clearItem = new PopupMenu.PopupMenuItem(_('Clear'));
         clearItem.connect('activate', () => this._clearWorkspaceStorage());
 
-        const prefsItem = new PopupMenu.PopupMenuItem(_('Extension Preferences'));
+        const prefsItem = new PopupMenu.PopupMenuItem(_('Preferences'));
         prefsItem.connect('activate', () => {
             this._destroyTooltip();
             this._openPreferences();
         });
 
         menu.addMenuItem(refreshItem);
+        menu.addMenuItem(scanItem);
         menu.addMenuItem(clearItem);
         menu.addMenuItem(prefsItem);
     }
@@ -629,10 +765,16 @@ export class VSCodiumWorkspacesCore {
     }
 
     private _removeWorkspaceEntry(entry: WorkspaceEntry): void {
-        try {
-            entry.storeDir.trash(null);
-        } catch (error) {
-            console.error(error as object, `Failed to trash workspace store for ${entry.uri}`);
+        if (entry.source === 'storage' && entry.storeDir) {
+            try {
+                entry.storeDir.trash(null);
+            } catch (error) {
+                console.error(error as object, `Failed to trash workspace store for ${entry.uri}`);
+            }
+        } else {
+            this._discoveredWorkspaceFiles = this._discoveredWorkspaceFiles.filter(
+                workspace => workspace.uri !== entry.uri
+            );
         }
 
         this._workspaces = this._workspaces.filter(workspace => workspace.uri !== entry.uri);
@@ -695,10 +837,6 @@ export class VSCodiumWorkspacesCore {
     private _buildLaunchArgv(binary: string, uri: string): string[] | null {
         const argv = [binary];
 
-        if (this._newWindow) {
-            argv.push('--new-window');
-        }
-
         if (uri.startsWith('vscode-remote://') || uri.startsWith('docker://')) {
             argv.push('--folder-uri', uri);
         } else {
@@ -734,6 +872,7 @@ export class VSCodiumWorkspacesCore {
         if (customIcon.length > 0) {
             const asFile = Gio.File.new_for_path(customIcon);
             if (asFile.query_exists(null)) {
+                this._log(`using custom icon file: ${customIcon}`);
                 return new St.Icon({
                     gicon: Gio.icon_new_for_string(customIcon),
                     style_class: 'system-status-icon',
@@ -741,11 +880,21 @@ export class VSCodiumWorkspacesCore {
             }
 
             if (St.IconTheme.new().has_icon(customIcon)) {
+                this._log(`using custom icon name: ${customIcon}`);
                 return new St.Icon({
                     icon_name: customIcon,
                     style_class: 'system-status-icon',
                 });
             }
+        }
+
+        const defaultVSCodiumIcon = Gio.File.new_for_path(DEFAULT_VSCODIUM_ICON_PATH);
+        if (defaultVSCodiumIcon.query_exists(null)) {
+            this._log(`using default icon file: ${DEFAULT_VSCODIUM_ICON_PATH}`);
+            return new St.Icon({
+                gicon: Gio.icon_new_for_string(DEFAULT_VSCODIUM_ICON_PATH),
+                style_class: 'system-status-icon',
+            });
         }
 
         for (const iconName of KNOWN_ICON_NAMES) {

@@ -20,9 +20,9 @@
         </key>
         <key name="prefer-workspace-file" type="b">
             <default>false</default>
-            <summary>Prefer Workspace File</summary>
-            <description>Whether to prefer the workspace file over the workspace directory if a
-                workspace file is present</description>
+            <summary>Consider .code-workspace Files Only</summary>
+            <description>Whether to only include .code-workspace entries in the list. Directory
+                workspaces without a .code-workspace file are ignored.</description>
         </key>
         <key name="debug" type="b">
             <default>false</default>
