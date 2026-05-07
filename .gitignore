@@ -1,0 +1,39 @@
+node_modules/
+.vscode/
+dist/
+*.log
+*.zip
+*.tar.gz
+
+# Ignore usual ignore stuff
+.DS_Store
+Thumbs.db
+
+# Ignore .vscode folder
+.vscode/
+
+# Ignore build folder
+build/
+
+# Ignore dist folder
+dist/
+
+# Ignore zip packed extension files
+monitor@astraext*.zip
+
+# Ignore node_modules folder
+node_modules/
+
+# Ignore package-lock.json file
+package-lock.json
+
+# Ignore compiled schemas
+schemas/gschemas.compiled
+
+# Ignore i18n files
+po/*.mo
+po/*.po~
+
+# Ignore TODOs
+TODOs.txt
+gnome-extension/schemas/gschemas.compiled
