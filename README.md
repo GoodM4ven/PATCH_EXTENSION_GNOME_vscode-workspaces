@@ -3,7 +3,9 @@
 
 # VSCodium Workspaces
 
-Forked for maintenance from the original project by [ZanzyTHEbar](https://github.com/ZanzyTHEbar), then rebranded for VSCodium-first usage.
+A quick VSC project traversal and workspace management tool for Linux, a GNOME Shell extension.
+
+Forked for maintenance from the original project by [ZanzyTHEbar](https://github.com/ZanzyTHEbar), then rebranded for [VSCodium](https://vscodium.com)-first usage.
 
 
 ## Objectives

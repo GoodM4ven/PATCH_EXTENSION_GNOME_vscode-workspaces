@@ -1,6 +1,6 @@
 {
     "name": "VSCodium Workspaces",
-    "description": "A VSCodium workspace management tool-set for GNOME.",
+    "description": "A VSC workspace management and quick switching tool-set for GNOME.",
     "uuid": "vscodium-workspaces@goodm4ven",
     "url": "https://github.com/GoodM4ven/PATCH_EXTENSION_GNOME_vscodium-workspaces",
     "settings-schema": "org.gnome.shell.extensions.vscodium-workspaces",

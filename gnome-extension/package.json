@@ -1,20 +1,23 @@
 {
     "name": "vscodium-workspaces",
     "version": "1.0.0",
-    "description": "A VSCodium workspace management tool-set for GNOME",
+    "description": "A VSC workspace management and quick switching tool-set for GNOME.",
     "type": "module",
     "private": true,
     "author": "GoodM4ven",
     "license": "GPL-3.0-or-later",
     "sideEffects": false,
     "keywords": [
-        "gnome",
+        "vsc",
+        "vscode",
         "vscodium",
-        "codium",
-        "workspace",
-        "javascript",
-        "typescript",
-        "gnome-shell"
+        "linux",
+        "gnome",
+        "gnome-extension",
+        "vscode-workspace",
+        "management",
+        "switching",
+        "traversal"
     ],
     "scripts": {
         "format": "prettier --check .",
