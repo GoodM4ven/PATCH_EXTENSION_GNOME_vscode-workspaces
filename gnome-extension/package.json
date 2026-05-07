@@ -19,7 +19,7 @@
     "scripts": {
         "format": "prettier --check .",
         "format:fix": "prettier --write --cache . && eslint --fix .",
-        "update-deps": "pnpm up -Li",
+        "update-deps": "npm update",
         "typecheck": "tsc --noEmit"
     },
     "devDependencies": {

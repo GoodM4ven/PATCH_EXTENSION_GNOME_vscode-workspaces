@@ -24,8 +24,8 @@ monitor@astraext*.zip
 # Ignore node_modules folder
 node_modules/
 
-# Ignore package-lock.json file
-package-lock.json
+# Keep npm lockfile for the extension subproject
+!gnome-extension/package-lock.json
 
 # Ignore compiled schemas
 schemas/gschemas.compiled

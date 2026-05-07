@@ -8,11 +8,11 @@ build: dist/extension.js
 all: build pack
 	@echo "Extension built. Now run 'make install' to install it."
 
-node_modules: package.json
-	pnpm install
+node_modules: package.json package-lock.json
+	npm ci
 
 dist/extension.js dist/prefs.js: node_modules
-	pnpm tsc
+	npx tsc
 
 schemas/gschemas.compiled: schemas/org.gnome.shell.extensions.$(NAME).gschema.xml
 	glib-compile-schemas schemas
