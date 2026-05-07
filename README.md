@@ -47,10 +47,15 @@ This repo still ships the optional Nautilus scripts:
 - `vscode_nautilus_workspaces.py`
 - `vscode-nautilus-open.py`
 
-And an installation helper:
+Install Nautilus Python bindings (package name varies by distro), then copy scripts to Nautilus extensions:
 
 ```bash
-bash <(wget -qO- https://raw.githubusercontent.com/GoodM4ven/PATCH_EXTENSION_GNOME_vscode-workspaces/main/install.sh)
+mkdir -p ~/.local/share/nautilus-python/extensions
+cp vscode_nautilus_workspaces.py ~/.local/share/nautilus-python/extensions/
+cp vscode-nautilus-open.py ~/.local/share/nautilus-python/extensions/
+chmod +x ~/.local/share/nautilus-python/extensions/vscode_nautilus_workspaces.py
+chmod +x ~/.local/share/nautilus-python/extensions/vscode-nautilus-open.py
+nautilus -q
 ```
 
 ## Credits
