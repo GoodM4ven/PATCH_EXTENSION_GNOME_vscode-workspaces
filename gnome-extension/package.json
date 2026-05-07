@@ -1,6 +1,6 @@
 {
     "name": "vscode-workspaces",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "description": "A VSCode/Codium Workspace management tool-set for GNOME",
     "type": "module",
     "private": true,
