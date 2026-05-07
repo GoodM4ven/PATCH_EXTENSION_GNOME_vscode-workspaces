@@ -61,6 +61,8 @@ export class VSCodiumWorkspacesCore {
     private _nofailList: string[] = [];
     private _customCmdArgs = '';
     private _favorites = new Set<string>();
+    private _rememberRemovedWorkspaces = false;
+    private _removedWorkspaceIdentityKeys = new Set<string>();
     private _customIcon = '';
     private _customLabels = new Map<string, string>();
 
@@ -88,6 +90,9 @@ export class VSCodiumWorkspacesCore {
     private _activeEditor: Editor | null = null;
     private _workspaces: WorkspaceEntry[] = [];
     private _discoveredWorkspaceFiles: WorkspaceEntry[] = [];
+    private _favoritesSubmenu: PopupMenu.PopupSubMenuMenuItem | null = null;
+    private _recentSubmenu: PopupMenu.PopupSubMenuMenuItem | null = null;
+    private _editorSubmenu: PopupMenu.PopupSubMenuMenuItem | null = null;
 
     private _tooltipActor: St.Label | null = null;
 
@@ -139,6 +144,9 @@ export class VSCodiumWorkspacesCore {
         this._availableEditors = [];
         this._workspaces = [];
         this._discoveredWorkspaceFiles = [];
+        this._favoritesSubmenu = null;
+        this._recentSubmenu = null;
+        this._editorSubmenu = null;
     }
 
     private _attachMenuSignals(): void {
@@ -164,16 +172,28 @@ export class VSCodiumWorkspacesCore {
         this._nofailList = this._settings.get_strv('nofail-workspaces');
         this._customCmdArgs = this._settings.get_string('custom-cmd-args');
         this._favorites = new Set(this._settings.get_strv('favorite-workspaces'));
+        this._rememberRemovedWorkspaces = this._settings.get_boolean('remember-removed-workspaces');
+        this._removedWorkspaceIdentityKeys = this._rememberRemovedWorkspaces
+            ? new Set(this._settings.get_strv('removed-workspaces'))
+            : new Set<string>();
         this._customIcon = this._settings.get_string('custom-icon');
         this._customLabels = this._parseCustomLabels(
             this._settings.get_string('custom-workspace-labels')
         );
+
+        if (!this._rememberRemovedWorkspaces && this._settings.get_strv('removed-workspaces').length > 0) {
+            this._settings.set_strv('removed-workspaces', []);
+        }
     }
 
     private _persistDynamicSettings(): void {
         if (!this._settings) return;
 
         this._settings.set_strv('favorite-workspaces', Array.from(this._favorites));
+        this._settings.set_strv(
+            'removed-workspaces',
+            this._rememberRemovedWorkspaces ? Array.from(this._removedWorkspaceIdentityKeys) : []
+        );
         this._settings.set_string('custom-workspace-labels', this._stringifyCustomLabels());
     }
 
@@ -217,7 +237,10 @@ export class VSCodiumWorkspacesCore {
             ...this._discoveredWorkspaceFiles,
         ]);
         this._normalizeFavoriteUris(deduped);
-        this._workspaces = deduped.slice(0, MAX_VISIBLE_WORKSPACES);
+        const filtered = this._rememberRemovedWorkspaces
+            ? deduped.filter(entry => !this._removedWorkspaceIdentityKeys.has(entry.identityKey))
+            : deduped;
+        this._workspaces = filtered.slice(0, MAX_VISIBLE_WORKSPACES);
         this._buildMenu();
     }
 
@@ -667,6 +690,10 @@ export class VSCodiumWorkspacesCore {
         if (!this._indicator) return;
 
         const menu = this._indicator.menu as PopupMenu.PopupMenu;
+        const submenuState = this._captureSubmenuState(menu);
+        this._favoritesSubmenu = null;
+        this._recentSubmenu = null;
+        this._editorSubmenu = null;
         menu.removeAll();
 
         this._appendWorkspaceSections(menu);
@@ -677,6 +704,43 @@ export class VSCodiumWorkspacesCore {
         if (this._availableEditors.length > 1) {
             menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
             this._appendEditorSelector(menu);
+        }
+
+        this._restoreSubmenuState(submenuState);
+    }
+
+    private _captureSubmenuState(menu: PopupMenu.PopupMenu): {
+        menuOpen: boolean;
+        favoritesOpen: boolean;
+        recentsOpen: boolean;
+        editorOpen: boolean;
+    } {
+        return {
+            menuOpen: menu.isOpen,
+            favoritesOpen: this._favoritesSubmenu?.menu.isOpen ?? false,
+            recentsOpen: this._recentSubmenu?.menu.isOpen ?? false,
+            editorOpen: this._editorSubmenu?.menu.isOpen ?? false,
+        };
+    }
+
+    private _restoreSubmenuState(state: {
+        menuOpen: boolean;
+        favoritesOpen: boolean;
+        recentsOpen: boolean;
+        editorOpen: boolean;
+    }): void {
+        if (!state.menuOpen) {
+            return;
+        }
+
+        if (state.favoritesOpen && this._favoritesSubmenu) {
+            this._favoritesSubmenu.setSubmenuShown(true);
+        }
+        if (state.recentsOpen && this._recentSubmenu) {
+            this._recentSubmenu.setSubmenuShown(true);
+        }
+        if (state.editorOpen && this._editorSubmenu) {
+            this._editorSubmenu.setSubmenuShown(true);
         }
     }
 
@@ -696,6 +760,7 @@ export class VSCodiumWorkspacesCore {
             for (const entry of favorites) {
                 favoriteSubmenu.menu.addMenuItem(this._createWorkspaceMenuItem(entry));
             }
+            this._favoritesSubmenu = favoriteSubmenu;
             menu.addMenuItem(favoriteSubmenu);
             menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         }
@@ -704,6 +769,7 @@ export class VSCodiumWorkspacesCore {
         for (const entry of recents) {
             recentSubmenu.menu.addMenuItem(this._createWorkspaceMenuItem(entry));
         }
+        this._recentSubmenu = recentSubmenu;
         menu.addMenuItem(recentSubmenu);
     }
 
@@ -739,6 +805,7 @@ export class VSCodiumWorkspacesCore {
             this._log(`favorite toggled: ${entry.uri}`);
             return Clutter.EVENT_STOP;
         });
+        favoriteButton.connect('button-release-event', () => Clutter.EVENT_STOP);
 
         const renameButton = new St.Button({
             style_class: 'workspace-icon-button',
@@ -757,6 +824,7 @@ export class VSCodiumWorkspacesCore {
             this._promptRenameWorkspace(entry);
             return Clutter.EVENT_STOP;
         });
+        renameButton.connect('button-release-event', () => Clutter.EVENT_STOP);
 
         const removeButton = new St.Button({
             style_class: 'workspace-icon-button',
@@ -776,6 +844,7 @@ export class VSCodiumWorkspacesCore {
             this._log(`workspace removed: ${entry.uri}`);
             return Clutter.EVENT_STOP;
         });
+        removeButton.connect('button-release-event', () => Clutter.EVENT_STOP);
 
         row.add_child(label);
         row.add_child(favoriteButton);
@@ -904,6 +973,7 @@ export class VSCodiumWorkspacesCore {
             editorSubmenu.menu.addMenuItem(item);
         }
 
+        this._editorSubmenu = editorSubmenu;
         menu.addMenuItem(editorSubmenu);
     }
 
@@ -1006,6 +1076,10 @@ export class VSCodiumWorkspacesCore {
     }
 
     private _removeWorkspaceEntry(entry: WorkspaceEntry): void {
+        if (this._rememberRemovedWorkspaces) {
+            this._removedWorkspaceIdentityKeys.add(entry.identityKey);
+        }
+
         if (entry.source === 'storage' && entry.storeDir) {
             try {
                 entry.storeDir.trash(null);

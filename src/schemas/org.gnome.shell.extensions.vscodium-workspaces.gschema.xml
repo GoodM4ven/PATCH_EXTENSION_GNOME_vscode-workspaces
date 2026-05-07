@@ -24,6 +24,16 @@
             <description>Whether to only include .code-workspace entries in the list. Directory
                 workspaces without a .code-workspace file are ignored.</description>
         </key>
+        <key name="remember-removed-workspaces" type="b">
+            <default>false</default>
+            <summary>Remember Removed Workspaces</summary>
+            <description>If true, removed workspaces stay hidden until manually restored from settings or reset.</description>
+        </key>
+        <key name="removed-workspaces" type="as">
+            <default>[]</default>
+            <summary>Removed Workspaces</summary>
+            <description>Internal list of removed workspace identity keys.</description>
+        </key>
         <key name="debug" type="b">
             <default>false</default>
             <summary>Debug</summary>

@@ -31,6 +31,7 @@ class SettingsUi {
     private readonly _customIcon: Adw.EntryRow;
 
     private readonly _preferWorkspaceFile: Adw.SwitchRow;
+    private readonly _rememberRemovedWorkspaces: Adw.SwitchRow;
     private readonly _debug: Adw.SwitchRow;
 
     private readonly _refreshInterval: Adw.SpinRow;
@@ -52,6 +53,7 @@ class SettingsUi {
         });
 
         this._preferWorkspaceFile = new Adw.SwitchRow({ title: _('Consider .code-workspace Files Only') });
+        this._rememberRemovedWorkspaces = new Adw.SwitchRow({ title: _('Remember Removed Workspaces') });
         this._debug = new Adw.SwitchRow({ title: _('Debug Logging') });
 
         this._refreshInterval = new Adw.SpinRow({
@@ -78,6 +80,7 @@ class SettingsUi {
         this.generalGroup.add(this._customIcon);
 
         this.behaviorGroup.add(this._preferWorkspaceFile);
+        this.behaviorGroup.add(this._rememberRemovedWorkspaces);
         this.behaviorGroup.add(this._refreshInterval);
         this.behaviorGroup.add(this._debug);
 
@@ -90,6 +93,12 @@ class SettingsUi {
         this._settings.bind('custom-icon', this._customIcon, 'text', Gio.SettingsBindFlags.DEFAULT);
 
         this._settings.bind('prefer-workspace-file', this._preferWorkspaceFile, 'active', Gio.SettingsBindFlags.DEFAULT);
+        this._settings.bind(
+            'remember-removed-workspaces',
+            this._rememberRemovedWorkspaces,
+            'active',
+            Gio.SettingsBindFlags.DEFAULT
+        );
         this._settings.bind('debug', this._debug, 'active', Gio.SettingsBindFlags.DEFAULT);
         this._settings.bind('refresh-interval', this._refreshInterval, 'value', Gio.SettingsBindFlags.DEFAULT);
     }

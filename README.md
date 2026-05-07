@@ -20,6 +20,10 @@ Forked for maintenance from the original project by [ZanzyTHEbar](https://github
 - Having no duplicated entries.
 - Added classification for VSC-opened directories and workspaces.
 - The ability to rename entries too.
+- Keeping the dropdown togglable lists open during interactions.
+- Anchoring the label (project directory) to the left.
+- An option to remember deleted workspaces. (disabled by default though)
+
 
 ## Installation
 
