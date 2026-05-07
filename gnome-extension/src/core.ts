@@ -32,7 +32,7 @@ interface WorkspaceJson {
 }
 
 const FILE_URI_PREFIX = 'file://';
-const KNOWN_ICON_NAMES = ['code', 'vscode', 'vscodium', 'codium', 'code-insiders', 'cursor'];
+const KNOWN_ICON_NAMES = ['code', 'vscode', 'vscodium', 'codium', 'code-insiders'];
 const MAX_VISIBLE_WORKSPACES = 75;
 
 export class VSCodeWorkspacesCore {
@@ -72,11 +72,6 @@ export class VSCodeWorkspacesCore {
             name: 'Code - Insiders',
             binary: 'code-insiders',
             workspacePath: GLib.build_filenamev([GLib.get_home_dir(), '.config/Code - Insiders/User/workspaceStorage']),
-        },
-        {
-            name: 'Cursor',
-            binary: 'cursor',
-            workspacePath: GLib.build_filenamev([GLib.get_home_dir(), '.config/Cursor/User/workspaceStorage']),
         },
     ];
 
@@ -257,10 +252,6 @@ export class VSCodeWorkspacesCore {
 
         if (lower.includes('insiders')) {
             return GLib.build_filenamev([this._userConfigDir, 'Code - Insiders/User/workspaceStorage']);
-        }
-
-        if (lower.includes('cursor')) {
-            return GLib.build_filenamev([this._userConfigDir, 'Cursor/User/workspaceStorage']);
         }
 
         return GLib.build_filenamev([this._userConfigDir, 'Code/User/workspaceStorage']);
