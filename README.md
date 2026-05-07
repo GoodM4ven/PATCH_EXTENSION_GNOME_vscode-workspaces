@@ -1,4 +1,4 @@
-# VSCode Workspaces (GNOME 50+ Fork)
+# VSCode Workspaces
 
 ![GitHub License](https://img.shields.io/github/license/GoodM4ven/PATCH_EXTENSION_GNOME_vscode-workspaces)
 
