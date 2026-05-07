@@ -8,7 +8,7 @@
 <div align="center">
     <br>
     <img src=".assets/icon.png" width="140">
-    <br>
+    <br><br>
 </div>
 
 <div align="left">
@@ -34,7 +34,9 @@ Forked for maintenance from the original project by [ZanzyTHEbar](https://github
 
 You can download the GNOME Shell extension from their platform:
 
-<img src=".github/assets/gnome-extensions.svg" width="140">
+<a href="https://extensions.gnome.org/extension/9877/vscodium-workspaces/" target="_blank">
+    <img src=".github/assets/gnome-extensions.svg" width="180">
+</a>
 
 
 ## Debugging
