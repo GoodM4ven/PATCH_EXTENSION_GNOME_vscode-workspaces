@@ -16,10 +16,12 @@ Forked for maintenance from [`ZanzyTHEbar/vscode-workspaces`](https://github.com
 git clone https://github.com/GoodM4ven/PATCH_EXTENSION_GNOME_vscode-workspaces.git
 cd PATCH_EXTENSION_GNOME_vscode-workspaces/gnome-extension
 
-make && make install
+make install
 
 gnome-extensions enable vscode-workspaces@goodm4ven
 ```
+
+`zip` is only required for publishing via `make pack`.
 
 ### Debugging
 

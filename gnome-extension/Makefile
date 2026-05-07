@@ -1,7 +1,7 @@
 NAME=vscode-workspaces
 DOMAIN=goodm4ven
 
-.PHONY: all pack install clean
+.PHONY: all pack install clean prepare-dist
 
 build: dist/extension.js
 
@@ -17,15 +17,19 @@ dist/extension.js dist/prefs.js: node_modules
 schemas/gschemas.compiled: schemas/org.gnome.shell.extensions.$(NAME).gschema.xml
 	glib-compile-schemas schemas
 
-$(NAME).zip: dist/extension.js dist/prefs.js schemas/gschemas.compiled
+prepare-dist: dist/extension.js dist/prefs.js schemas/gschemas.compiled
 	@cp -r schemas dist/
 	@cp stylesheet.css dist/
 	@cp metadata.json dist/
-	@(cd dist && zip ../$(NAME).zip -9r .)
+
+$(NAME).zip: prepare-dist
+	@command -v zip >/dev/null 2>&1 || { echo "Error: 'zip' is required for 'make pack'. Install it and retry."; exit 1; }
+	@rm -f $(NAME).zip
+	@(cd dist && zip ../$(NAME).zip -9r . -x "schemas/gschemas.compiled")
 
 pack: $(NAME).zip
 
-install: $(NAME).zip
+install: prepare-dist
 	@touch ~/.local/share/gnome-shell/extensions/$(NAME)@$(DOMAIN)
 	@rm -rf ~/.local/share/gnome-shell/extensions/$(NAME)@$(DOMAIN)
 	@mv dist ~/.local/share/gnome-shell/extensions/$(NAME)@$(DOMAIN)
